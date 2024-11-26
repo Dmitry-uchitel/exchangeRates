@@ -40,7 +40,7 @@ public class ExchangeRateCalculation {
             currencyTarget = exchangeRate.getCurrencyBase();
             rate = 1/exchangeRate.getRate();
         }
-        Double convertedAmount = amount*rate;
-        return new ExchangeRateCalculation(currencyBase, currencyTarget, rate, amount, convertedAmount);
+        Double convertedAmount = Math.round(amount*rate*100)/100.;
+        return new ExchangeRateCalculation(currencyBase, currencyTarget, Math.round(rate*100)/100., amount, convertedAmount);
     }
 }

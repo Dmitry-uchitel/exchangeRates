@@ -77,7 +77,7 @@ public class ExchangeRatesDatabase {
         return exchangeRate;
     }
 
-    public static List<ExchangeRateWithId> getAllExchangeRatesWithId() {
+    private static List<ExchangeRateWithId> getAllExchangeRatesWithId() {
         String sql = "SELECT * FROM ExchangeRates;";
         List<ExchangeRateWithId> exchangeRateWithIdList = new ArrayList<>();
 
@@ -103,9 +103,9 @@ public class ExchangeRatesDatabase {
                 rs.getInt("targetCurrencyId"), rs.getDouble("rate"));
     }
 
-    public static List<ExchangeRate> getAllExchangeRatesFromExchangeRatesWithId(List<ExchangeRateWithId> exchangeRateWithIdList) {
+    public static List<ExchangeRate> getAllExchangeRates() {
         List<ExchangeRate> exchangeRates = new ArrayList<>();
-        for (ExchangeRateWithId exchangeRateWithId:exchangeRateWithIdList){
+        for (ExchangeRateWithId exchangeRateWithId:getAllExchangeRatesWithId()){
             exchangeRates.add(ExchangeRateFromExchangeRateWithId(exchangeRateWithId));
         }
         return exchangeRates;
@@ -120,8 +120,8 @@ public class ExchangeRatesDatabase {
     }
 
     public static ExchangeRate getExchangeRateByCode(String codeBase, String codeTarget){
-        Currency currencyBase = CurrenciesDatabase.getCurrency(codeBase);
-        Currency currencyTarget = CurrenciesDatabase.getCurrency(codeTarget);
+        Currency currencyBase = CurrenciesDatabase.getCurrencyByCode(codeBase);
+        Currency currencyTarget = CurrenciesDatabase.getCurrencyByCode(codeTarget);
         ExchangeRateWithId exchangeRateWithId= getExchangeRateById(currencyBase.getId(), currencyTarget.getId());
         return ExchangeRateFromExchangeRateWithId(exchangeRateWithId);
     }

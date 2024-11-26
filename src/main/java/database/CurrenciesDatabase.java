@@ -13,7 +13,6 @@ import java.util.List;
 public class CurrenciesDatabase {
     private static final String URL = "jdbc:sqlite:C:/SQLLite/database1/database1.db";
 
-
     public static void insertCurrency(String code, String fullname, String sign) {
         String sql = "INSERT INTO Currencies (code, fullname, sign) VALUES ('"
                 + code + "', '" + fullname + "', '" + sign + "')";
@@ -30,6 +29,7 @@ public class CurrenciesDatabase {
             System.out.println(e.getMessage());
         }
     }
+
 
     public static List<Currency> getAllCurrencies() {
         String sql = "SELECT * FROM Currencies;";
@@ -53,7 +53,7 @@ public class CurrenciesDatabase {
         return currencyList;
     }
 
-    public static Currency getCurrency(String code) {
+    public static Currency getCurrencyByCode(String code) {
         String sql = "SELECT * FROM Currencies WHERE code='" + code + "';";
 
         Currency currency = null;
@@ -74,7 +74,7 @@ public class CurrenciesDatabase {
     }
 
 
-    public static Currency getCurrencyById(Integer id) {
+    static Currency getCurrencyById(Integer id) {
         String sql = "SELECT * FROM Currencies WHERE id='" + id + "';";
         Currency currency = null;
         try (Connection connection = DriverManager.getConnection(URL)) {
@@ -92,7 +92,7 @@ public class CurrenciesDatabase {
         return currency;
     }
 
-    public static Currency getCurrencyByQuery(ResultSet rs) throws SQLException {
+    static Currency getCurrencyByQuery(ResultSet rs) throws SQLException {
         return new Currency(rs.getInt("id"), rs.getString("code"),
                 rs.getString("fullname"), rs.getString("sign"));
     }

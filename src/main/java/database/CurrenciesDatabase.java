@@ -13,86 +13,45 @@ import java.util.List;
 public class CurrenciesDatabase {
     private static final String URL = "jdbc:sqlite:C:/SQLLite/database1/database1.db";
 
-    public static void insertCurrency(String code, String fullname, String sign) {
-        String sql = "INSERT INTO Currencies (code, fullname, sign) VALUES ('"
-                + code + "', '" + fullname + "', '" + sign + "')";
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement()) {
-                    stmt.execute(sql);
-                    System.out.println("Data inserted");
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+    public static Currency insertCurrency(String code, String fullname, String sign) throws SQLException {
+        String sql = String.format("INSERT INTO Currencies (code, fullname, sign) VALUES ('%s', '%s', '%s');", code, fullname, sign);
+
+        System.out.println(sql);
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        stmt.execute(sql);
+        Currency currency = getCurrencyByCode(code);
+        connection.close();
+        return currency;
     }
 
 
-    public static List<Currency> getAllCurrencies() {
-        String sql = "SELECT * FROM Currencies;";
+    public static List<Currency> getAllCurrencies() throws SQLException {
+        String sql = String.format("SELECT * FROM Currencies;");
         List<Currency> currencyList = new ArrayList<>();
-
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
-                    while (rs.next()) {
-                        currencyList.add(getCurrencyByQuery(rs));
-
-                    }
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        while (rs.next()) {
+            currencyList.add(getCurrencyByQuery(rs));
         }
+        connection.close();
         return currencyList;
     }
 
-    public static Currency getCurrencyByCode(String code) {
-        String sql = "SELECT * FROM Currencies WHERE code='" + code + "';";
 
+    public static Currency getCurrencyByCode(String code) throws SQLException {
+        String sql = String.format("SELECT * FROM Currencies WHERE code='%s';", code);
         Currency currency = null;
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
-                    currency = getCurrencyByQuery(rs);
-
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        currency = getCurrencyByQuery(rs);
+        connection.close();
         return currency;
     }
 
-
-    static Currency getCurrencyById(Integer id) {
-        String sql = "SELECT * FROM Currencies WHERE id='" + id + "';";
-        Currency currency = null;
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
-                    currency = getCurrencyByQuery(rs);
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return currency;
-    }
-
-    static Currency getCurrencyByQuery(ResultSet rs) throws SQLException {
+    private static Currency getCurrencyByQuery(ResultSet rs) throws SQLException {
         return new Currency(rs.getInt("id"), rs.getString("code"),
                 rs.getString("fullname"), rs.getString("sign"));
     }

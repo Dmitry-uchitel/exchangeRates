@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 
 @WebServlet(name = "currenciesServlet", value = "/currencies")
 public class CurrenciesServlet extends HttpServlet {
@@ -17,7 +18,13 @@ public class CurrenciesServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         // Используем Gson для сериализации объекта в JSON
         Gson gson = new Gson();
-        String json = gson.toJson(CurrenciesDatabase.getAllCurrencies());
+        String json;
+        try {
+            json = gson.toJson(CurrenciesDatabase.getAllCurrencies());
+        } catch (SQLException e) {
+            json = e.getMessage();
+        }
+
         PrintWriter out = response.getWriter();
         out.print(json);
         out.flush();
@@ -27,6 +34,18 @@ public class CurrenciesServlet extends HttpServlet {
         String fullName = request.getParameter("name");
         String code = request.getParameter("code");
         String sign = request.getParameter("sign");
-        CurrenciesDatabase.insertCurrency(code.toUpperCase(), fullName, sign);
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
+        Gson gson = new Gson();
+        String json;
+        try {
+            json = gson.toJson(CurrenciesDatabase.insertCurrency(code.toUpperCase(), fullName, sign));
+        } catch (SQLException e) {
+            json = e.getMessage();
+        }
+        PrintWriter out = response.getWriter();
+        out.print(json);
+        out.flush();
+
     }
 }

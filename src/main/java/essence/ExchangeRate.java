@@ -3,6 +3,19 @@ package essence;
 public class ExchangeRate {
     private Integer id;
     private Currency currencyBase;
+
+    public void setCurrencyBase(Currency currencyBase) {
+        this.currencyBase = currencyBase;
+    }
+
+    public void setCurrencyTarget(Currency currencyTarget) {
+        this.currencyTarget = currencyTarget;
+    }
+
+    public void setRate(Double rate) {
+        this.rate = rate;
+    }
+
     private Currency currencyTarget;
     private Double rate;
 
@@ -24,6 +37,7 @@ public class ExchangeRate {
     public Double getRate() {
         return rate;
     }
+
 
     @Override
     public String toString() {

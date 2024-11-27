@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.SQLException;
 
 @WebServlet(name = "currencyServlet", value = "/currency/*")
 public class CurrencyServlet extends HttpServlet {
@@ -18,11 +19,14 @@ public class CurrencyServlet extends HttpServlet {
         response.setCharacterEncoding("UTF-8");
         // Используем Gson для сериализации объекта в JSON
         Gson gson = new Gson();
-        String json = gson.toJson(CurrenciesDatabase.getCurrencyByCode(code.toUpperCase()));
+        String json;
+        try {
+            json = gson.toJson(CurrenciesDatabase.getCurrencyByCode(code.toUpperCase()));
+        } catch (SQLException e) {
+            json = e.getMessage();
+        }
         PrintWriter out = response.getWriter();
         out.print(json);
         out.flush();
-
-
     }
 }

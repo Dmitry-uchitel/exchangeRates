@@ -4,6 +4,8 @@ import database.ExchangeRatesDatabase;
 import essence.Currency;
 import essence.ExchangeRate;
 
+import java.sql.SQLException;
+
 public class ExchangeRateCalculation {
 
     private Currency currencyBase;
@@ -25,7 +27,7 @@ public class ExchangeRateCalculation {
         return String.format("%s\n%s\n%.5f\n%.2f\n%.2f", currencyBase, currencyTarget, rate,amount,convertedAmount);
     }
 
-    public static ExchangeRateCalculation calculate(String codeBase, String codeTarget, Double amount){
+    public static ExchangeRateCalculation calculate(String codeBase, String codeTarget, Double amount) throws SQLException {
         ExchangeRate exchangeRate = ExchangeRatesDatabase.getExchangeRateByCode(codeBase, codeTarget);
         Currency currencyBase;
         Currency currencyTarget;

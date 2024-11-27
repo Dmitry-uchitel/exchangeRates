@@ -2,150 +2,88 @@ package database;
 
 import essence.Currency;
 import essence.ExchangeRate;
-import essence.ExchangeRateWithId;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ExchangeRatesDatabase {
     private static final String URL = "jdbc:sqlite:C:/SQLLite/database1/database1.db";
 
-    public static ExchangeRate insertExchangeRate(String baseCurrencyCode, String targetCurrencyCode, Double rate) {
-        String sqlId1 = "Select * from Currencies where code='"+baseCurrencyCode+"';";
-        String sqlId2 = "Select * from Currencies where code='"+targetCurrencyCode+"';";
-        ExchangeRate exchangeRate = null;
-
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement()) {
-                    ResultSet rs = stmt.executeQuery(sqlId1);
-                    Currency currencyBase = CurrenciesDatabase.getCurrencyByQuery(rs);
-                    rs = stmt.executeQuery(sqlId2);
-                    Currency currencyTarget = CurrenciesDatabase.getCurrencyByQuery(rs);
-
-                    String sqlInsert = "insert into ExchangeRates (BaseCurrencyId, targetCurrencyId, Rate) VALUES ('"
-                            + currencyBase.getId() + "', '" + currencyTarget.getId() + "', " + rate + ")";
-                    stmt.execute(sqlInsert);
-
-                    String sqlGetId = "Select id from ExchangeRates where BaseCurrencyId="
-                            + currencyBase.getId() + " and TargetCurrencyId = "+ currencyTarget.getId() + ";";
-                    rs = stmt.executeQuery(sqlGetId);
-                    Integer id = rs.getInt("id");
-                    exchangeRate = new ExchangeRate(id, currencyBase, currencyTarget, rate);
-                    System.out.println("Data inserted");
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
+    public static List<ExchangeRate> getAllExchangeRates() throws SQLException {
+        String sql = "select exc.id, cur1.id as baseId, cur1.code as baseCode, cur1.fullname as baseName, \n" +
+                "cur1.sign as baseSign, cur2.id as targetId, cur2.code as targetCode, cur2.fullname as targetName, cur2.sign as targetSign, exc.rate\n" +
+                "from ExchangeRates exc\n" +
+                "join Currencies cur1 on exc.BaseCurrencyId=cur1.id\n" +
+                "join Currencies cur2 on exc.TargetCurrencyId=cur2.id;";
+        List<ExchangeRate> exchangeRateList = new ArrayList<>();
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        while (rs.next()) {
+            exchangeRateList.add(exchangeRateByQuery(rs));
         }
+        return exchangeRateList;
+    }
+
+    private static ExchangeRate exchangeRateByQuery(ResultSet rs) throws SQLException{
+        Integer id = rs.getInt("id");
+        Integer baseId = rs.getInt("baseId");
+        String baseCode = rs.getString("baseCode");
+        String baseName = rs.getString("baseName");
+        String baseSign = rs.getString("baseSign");
+        Currency baseCurrency = new Currency(baseId, baseName, baseCode, baseSign);
+        Integer targetId = rs.getInt("targetId");
+        String targetCode = rs.getString("targetCode");
+        String targetName = rs.getString("targetName");
+        String targetSign = rs.getString("targetSign");
+        Currency targetCurrency = new Currency(targetId, targetName, targetCode, targetSign);
+        Double rate = rs.getDouble("rate");
+        return new ExchangeRate(id, baseCurrency, targetCurrency, rate);
+    }
+
+    public static ExchangeRate getExchangeRateByCode(String codeBase, String codeTarget) throws SQLException{
+        String sql = String.format("select exc.id, cur1.id as BaseId, cur1.code as baseCode, cur1.fullname as baseName, \n" +
+                "cur1.sign as baseSign, cur2.id as targetId, cur2.code as targetCode, cur2.fullname as targetName, cur2.sign as targetSign, exc.rate\n" +
+                "from ExchangeRates exc\n" +
+                "join Currencies cur1 on exc.BaseCurrencyId=cur1.id\n" +
+                "join Currencies cur2 on exc.TargetCurrencyId=cur2.id\n" +
+                "where (baseCode = '%s' AND targetcode = '%s' OR targetCode = '%s' AND baseCode = '%s')", codeBase,codeTarget,codeBase,codeTarget);
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        ExchangeRate exchangeRate = exchangeRateByQuery(rs);
+        connection.close();
         return exchangeRate;
     }
 
-    public static ExchangeRate updateExchangeRate(String baseCurrencyCode, String targetCurrencyCode, Double rate) {
-        String sqlId1 = "Select * from Currencies where code='"+baseCurrencyCode+"';";
-        String sqlId2 = "Select * from Currencies where code='"+targetCurrencyCode+"';";
-        ExchangeRate exchangeRate = null;
+    public static ExchangeRate updateExchangeRate(String codeBase, String codeTarget, Double rate) throws SQLException{
 
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement()) {
-                    ResultSet rs = stmt.executeQuery(sqlId1);
-                    Currency currencyBase = CurrenciesDatabase.getCurrencyByQuery(rs);
-                    rs = stmt.executeQuery(sqlId2);
-                    Currency currencyTarget = CurrenciesDatabase.getCurrencyByQuery(rs);
+        String sql = String.format(Locale.US,"update ExchangeRates set rate = %f\n" +
+                "where BaseCurrencyId = (Select id from Currencies where code = '%s') and TargetCurrencyId = (Select id from Currencies where code = '%s')\n" +
+                "or BaseCurrencyId = (Select id from Currencies where code = '%s') and TargetCurrencyId = (Select id from Currencies where code = '%s');",rate,codeBase,codeTarget,codeTarget,codeBase);
 
-                    String sqlGetId = "Select id from ExchangeRates where BaseCurrencyId="
-                            + currencyBase.getId() + " and TargetCurrencyId = "+ currencyTarget.getId() + ";";
-                    rs = stmt.executeQuery(sqlGetId);
-                    Integer id = rs.getInt("id");
-
-                    String sqlInsert = "update ExchangeRates set Rate =" + rate + " where id = "+ id + ";";
-                    stmt.executeUpdate(sqlInsert);
-
-                    exchangeRate = new ExchangeRate(id, currencyBase, currencyTarget, rate);
-                    System.out.println("Data inserted");
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        System.out.println(sql);
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        stmt.executeUpdate(sql);
+        ExchangeRate exchangeRate = getExchangeRateByCode(codeBase, codeTarget);
+        connection.close();
         return exchangeRate;
     }
 
-    private static List<ExchangeRateWithId> getAllExchangeRatesWithId() {
-        String sql = "SELECT * FROM ExchangeRates;";
-        List<ExchangeRateWithId> exchangeRateWithIdList = new ArrayList<>();
+    public static ExchangeRate insertExchangeRate(String baseCurrencyCode, String targetCurrencyCode, Double rate) throws SQLException{
+        String sql = String.format(Locale.US,"insert into ExchangeRates (BaseCurrencyId, targetCurrencyId, Rate) \n" +
+                "VALUES ((select id from Currencies where code='%s'),(select id from Currencies where code='%s'), %f );", baseCurrencyCode, targetCurrencyCode, rate);
 
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
-                    while (rs.next()) {
-                        exchangeRateWithIdList.add(getExchangeRateWithIdByQuery(rs));
-                    }
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return exchangeRateWithIdList;
-    }
-
-    public static ExchangeRateWithId getExchangeRateWithIdByQuery(ResultSet rs) throws SQLException {
-        return new ExchangeRateWithId(rs.getInt("id"), rs.getInt("baseCurrencyId"),
-                rs.getInt("targetCurrencyId"), rs.getDouble("rate"));
-    }
-
-    public static List<ExchangeRate> getAllExchangeRates() {
-        List<ExchangeRate> exchangeRates = new ArrayList<>();
-        for (ExchangeRateWithId exchangeRateWithId:getAllExchangeRatesWithId()){
-            exchangeRates.add(ExchangeRateFromExchangeRateWithId(exchangeRateWithId));
-        }
-        return exchangeRates;
-    }
-
-    public static ExchangeRate ExchangeRateFromExchangeRateWithId(ExchangeRateWithId exchangeRateWithId){
-        Integer id = exchangeRateWithId.getId();
-        Currency currencyBase = CurrenciesDatabase.getCurrencyById(exchangeRateWithId.getCurrencyBaseId());
-        Currency currencyTarget = CurrenciesDatabase.getCurrencyById(exchangeRateWithId.getCurrencyTargetId());
-        Double rate = exchangeRateWithId.getRate();
-        return new ExchangeRate(id, currencyBase, currencyTarget, rate);
-    }
-
-    public static ExchangeRate getExchangeRateByCode(String codeBase, String codeTarget){
-        Currency currencyBase = CurrenciesDatabase.getCurrencyByCode(codeBase);
-        Currency currencyTarget = CurrenciesDatabase.getCurrencyByCode(codeTarget);
-        ExchangeRateWithId exchangeRateWithId= getExchangeRateById(currencyBase.getId(), currencyTarget.getId());
-        return ExchangeRateFromExchangeRateWithId(exchangeRateWithId);
-    }
-
-    public static ExchangeRateWithId getExchangeRateById(Integer idBase, Integer idTarget){
-        String sql = String.format("SELECT * FROM ExchangeRates where (BaseCurrencyId = %s AND TargetCurrencyId = %s OR " +
-                "TargetCurrencyId = %s AND BaseCurrencyId = %s)", idBase, idTarget, idBase, idTarget);
-
-        ExchangeRateWithId exchangeRateWithId = null;
-        try (Connection connection = DriverManager.getConnection(URL)) {
-            if (connection != null) {
-                try (Statement stmt = connection.createStatement();
-                     ResultSet rs = stmt.executeQuery(sql)) {
-                    exchangeRateWithId = getExchangeRateWithIdByQuery(rs);
-
-                } catch (SQLException e) {
-                    System.out.println(e.getMessage());
-                }
-            }
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
-        return exchangeRateWithId;
-
+        System.out.println(sql);
+        Connection connection = DriverManager.getConnection(URL);
+        Statement stmt = connection.createStatement();
+        stmt.execute(sql);
+        ExchangeRate exchangeRate = getExchangeRateByCode(baseCurrencyCode, targetCurrencyCode);
+        connection.close();
+        return exchangeRate;
     }
 
 }

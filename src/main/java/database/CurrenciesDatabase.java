@@ -14,6 +14,12 @@ public class CurrenciesDatabase {
     private static final String URL = "jdbc:sqlite:C:/SQLLite/database1/database1.db";
 
     public static Currency insertCurrency(String code, String fullname, String sign) throws SQLException {
+        try {
+            Class.forName("org.sqlite.Driver");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         String sql = String.format("INSERT INTO Currencies (code, fullname, sign) VALUES ('%s', '%s', '%s');", code, fullname, sign);
 
         System.out.println(sql);
@@ -27,6 +33,12 @@ public class CurrenciesDatabase {
 
 
     public static List<Currency> getAllCurrencies() throws SQLException {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         String sql = String.format("SELECT * FROM Currencies;");
         List<Currency> currencyList = new ArrayList<>();
         Connection connection = DriverManager.getConnection(URL);
@@ -41,6 +53,12 @@ public class CurrenciesDatabase {
 
 
     public static Currency getCurrencyByCode(String code) throws SQLException {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         String sql = String.format("SELECT * FROM Currencies WHERE code='%s';", code);
         Currency currency = null;
         Connection connection = DriverManager.getConnection(URL);

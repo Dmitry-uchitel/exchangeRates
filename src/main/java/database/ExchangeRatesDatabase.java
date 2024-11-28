@@ -12,6 +12,12 @@ public class ExchangeRatesDatabase {
     private static final String URL = "jdbc:sqlite:C:/SQLLite/database1/database1.db";
 
     public static List<ExchangeRate> getAllExchangeRates() throws SQLException {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         String sql = "select exc.id, cur1.id as baseId, cur1.code as baseCode, cur1.fullname as baseName, \n" +
                 "cur1.sign as baseSign, cur2.id as targetId, cur2.code as targetCode, cur2.fullname as targetName, cur2.sign as targetSign, exc.rate\n" +
                 "from ExchangeRates exc\n" +
@@ -44,6 +50,12 @@ public class ExchangeRatesDatabase {
     }
 
     public static ExchangeRate getExchangeRateByCode(String codeBase, String codeTarget) throws SQLException{
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         String sql = String.format("select exc.id, cur1.id as BaseId, cur1.code as baseCode, cur1.fullname as baseName, \n" +
                 "cur1.sign as baseSign, cur2.id as targetId, cur2.code as targetCode, cur2.fullname as targetName, cur2.sign as targetSign, exc.rate\n" +
                 "from ExchangeRates exc\n" +
@@ -59,6 +71,11 @@ public class ExchangeRatesDatabase {
     }
 
     public static ExchangeRate updateExchangeRate(String codeBase, String codeTarget, Double rate) throws SQLException{
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
 
         String sql = String.format(Locale.US,"update ExchangeRates set rate = %f\n" +
                 "where BaseCurrencyId = (Select id from Currencies where code = '%s') and TargetCurrencyId = (Select id from Currencies where code = '%s')\n" +
@@ -74,6 +91,12 @@ public class ExchangeRatesDatabase {
     }
 
     public static ExchangeRate insertExchangeRate(String baseCurrencyCode, String targetCurrencyCode, Double rate) throws SQLException{
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+
         String sql = String.format(Locale.US,"insert into ExchangeRates (BaseCurrencyId, targetCurrencyId, Rate) \n" +
                 "VALUES ((select id from Currencies where code='%s'),(select id from Currencies where code='%s'), %f );", baseCurrencyCode, targetCurrencyCode, rate);
 
